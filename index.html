@@ -374,6 +374,12 @@
       outline: none;
     }
 
+    .btn:disabled {
+      cursor: wait;
+      opacity: 0.8;
+      transform: none;
+    }
+
     .hero-visual {
       position: relative;
       min-height: 480px;
@@ -1646,23 +1652,23 @@
           <div class="feature-list">
             <article class="feature-item reveal">
               <div class="feature-icon" aria-hidden="true">✔</div>
-              <p> szybkie tempo pracy (duża liczba dzieci w krótkim czasie)</p>
+              <p>✔ szybkie tempo pracy (duża liczba dzieci w krótkim czasie)</p>
             </article>
             <article class="feature-item reveal delay-1">
               <div class="feature-icon" aria-hidden="true">✔</div>
-              <p> estetyczne, dopracowane wzory</p>
+              <p>✔ estetyczne, dopracowane wzory</p>
             </article>
             <article class="feature-item reveal delay-2">
               <div class="feature-icon" aria-hidden="true">✔</div>
-              <p> szeroka oferta motywów (klasyczne + autorskie kompozycje)</p>
+              <p>✔ szeroka oferta motywów (klasyczne + autorskie kompozycje)</p>
             </article>
             <article class="feature-item reveal delay-3">
               <div class="feature-icon" aria-hidden="true">✔</div>
-              <p> indywidualne podejście do dziecka</p>
+              <p>✔ indywidualne podejście do dziecka</p>
             </article>
             <article class="feature-item reveal delay-4">
               <div class="feature-icon" aria-hidden="true">✔</div>
-              <p> punktualność i pełne przygotowanie stanowiska</p>
+              <p>✔ punktualność i pełne przygotowanie stanowiska</p>
             </article>
           </div>
 
@@ -1858,13 +1864,24 @@
           </div>
 
           <div class="contact-card reveal delay-1">
-            <form class="form" id="contactForm" novalidate aria-label="Formularz kontaktowy Kolorowe Buzie">
+            <form class="form" id="contactForm" action="https://formsubmit.co/kolorowebuzie@gmail.com" method="POST" novalidate aria-label="Formularz kontaktowy Kolorowe Buzie">
+              <input type="hidden" name="_subject" value="Nowe zapytanie ze strony Kolorowe Buzie" />
+              <input type="hidden" name="_template" value="table" />
+              <input type="hidden" name="_next" id="form-next" value="" />
+              <input type="text" name="_honey" tabindex="-1" autocomplete="off" style="display:none" aria-hidden="true" />
               <div class="form-grid">
                 <div class="field" data-field="name">
                   <label for="name">Imię</label>
                   <input id="name" name="name" type="text" autocomplete="name" aria-describedby="name-error" />
                   <span id="name-error" class="error-text" aria-live="polite"></span>
                 </div>
+
+                <div class="field" data-field="email">
+                  <label for="email">E-mail</label>
+                  <input id="email" name="email" type="email" autocomplete="email" aria-describedby="email-error" />
+                  <span id="email-error" class="error-text" aria-live="polite"></span>
+                </div>
+
 
                 <div class="field" data-field="event-date">
                   <label for="event-date">Data wydarzenia</label>
@@ -1973,11 +1990,24 @@
 
       const form = document.getElementById('contactForm');
       const status = document.getElementById('form-status');
+      const submitButton = form.querySelector('button[type="submit"]');
+      const nextInput = document.getElementById('form-next');
       const today = new Date();
       const tzOffsetMs = today.getTimezoneOffset() * 60000;
       const localISODate = new Date(Date.now() - tzOffsetMs).toISOString().split('T')[0];
       const dateInput = document.getElementById('event-date');
       dateInput.setAttribute('min', localISODate);
+      nextInput.value = `${window.location.origin}${window.location.pathname}?sent=1#kontakt`;
+
+      const searchParams = new URLSearchParams(window.location.search);
+      if (searchParams.get('sent') === '1') {
+        status.textContent = 'Dziękujemy. Zapytanie zostało wysłane na maila Kolorowe Buzie.';
+        status.className = 'form-status success';
+        if (window.history.replaceState) {
+          const cleanUrl = `${window.location.origin}${window.location.pathname}#kontakt`;
+          window.history.replaceState({}, document.title, cleanUrl);
+        }
+      }
 
       const fields = {
         name: {
@@ -1985,6 +2015,15 @@
           validate(value) {
             if (!value.trim()) return 'Podaj imię.';
             if (value.trim().length < 2) return 'Imię powinno mieć minimum 2 znaki.';
+            return '';
+          }
+        },
+        email: {
+          input: document.getElementById('email'),
+          validate(value) {
+            if (!value.trim()) return 'Podaj adres e-mail.';
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+            if (!emailPattern.test(value.trim())) return 'Podaj poprawny adres e-mail.';
             return '';
           }
         },
@@ -2085,11 +2124,11 @@
           return;
         }
 
-        status.textContent = 'Formularz wygląda poprawnie i jest gotowy do podpięcia pod wysyłkę.';
+        status.textContent = 'Wysyłanie zapytania...';
         status.className = 'form-status success';
-        form.reset();
-        dateInput.setAttribute('min', localISODate);
-        Object.keys(fields).forEach((fieldName) => setFieldState(fieldName, ''));
+        submitButton.disabled = true;
+        submitButton.setAttribute('aria-busy', 'true');
+        form.submit();
       });
     })();
   </script>
